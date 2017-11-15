@@ -77,8 +77,8 @@ function receivedHandshake(res){
             valid = false;
           }
           if(valid){
-            const verified = ECC.secp256k1.verify(clientJSON[0].data.publicKeyInfo.publicKey,JSON.stringify(certificate.data), certificate.signature);
-            valid = (verified && ECC.secp256k1.verify(clientJSON[0].data.publicKeyInfo.publicKey,JSON.stringify(clientJSON[0].data), clientJSON[0].signature))
+            const verified = ECC.secp256k1.verify(clientJSON[j].data.publicKeyInfo.publicKey,JSON.stringify(certificate.data), certificate.signature);
+            valid = (verified && ECC.secp256k1.verify(clientJSON[j].data.publicKeyInfo.publicKey,JSON.stringify(clientJSON[j].data), clientJSON[j].signature))
           }
         }
       }catch(err){
@@ -118,7 +118,7 @@ r1.question('Server URL: ', (serverURL) => {
   var temp = serverURL.split(":");
   options.hostname = temp[0];
   options.port = temp[1] || 3000;
-  r1.question('Msg: ', (msg) =>{
+  r1.question('Message: ', (msg) =>{
     messageToSend = msg;
     var handshakeReq = http.request(options, receivedHandshake);
     handshakeReq.on('error', function (e) {
