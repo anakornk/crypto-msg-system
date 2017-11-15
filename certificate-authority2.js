@@ -24,11 +24,11 @@ if(args[0] == 'init'){
       "certificates": []
     };
 
-    fs.writeFileSync('ca.json', JSON.stringify(caInfo));
+    fs.writeFileSync('ca2.json', JSON.stringify(caInfo));
     process.exit(0);
   });
 } else if(args[0] == 'selfsign'){
-  var caJSON = JSON.parse(fs.readFileSync('ca.json', 'utf8'));
+  var caJSON = JSON.parse(fs.readFileSync('ca2.json', 'utf8'));
   var certificate = {
     "data": {
       "subjectName": {
@@ -43,6 +43,46 @@ if(args[0] == 'init'){
   certificate.signature = ECC.secp256k1.sign(caJSON.privateKey,JSON.stringify(certificate.data));
   console.log(JSON.stringify(certificate));
   process.exit(0);
+} else if(args[0] == 'csr'){
+  console.log("CSR - create certificate")
+  var caJSON = JSON.parse(fs.readFileSync('ca2.json', 'utf8'));
+
+  r1.question('CA hostname: ', (hostName) => {
+    const caInfo = {
+      "commonName": caJSON.commonName,
+      "publicKeyInfo": caJSON.publicKeyInfo
+    };
+    var postData = JSON.stringify(caInfo);
+
+    var options = {
+        hostname: hostName,
+        port: 3001,
+        path: '/csr',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    };
+
+    var req = http.request(options, function (res) {
+        res.setEncoding('utf8');
+        res.on('data', function (chunk) {
+          var caJSON = JSON.parse(fs.readFileSync('ca2.json', 'utf8'));
+          caJSON.certificates = JSON.parse(chunk);
+          fs.writeFileSync('ca2.json', JSON.stringify(caJSON));
+          process.exit(0);
+        });
+    });
+
+    req.on('error', function (e) {
+      console.log('Problem with request:', e.message);
+      process.exit(0);
+    });
+
+    req.write(postData);
+    req.end();
+
+  });
 } else {
   // start web server
   startWebServer();
@@ -73,7 +113,7 @@ function startWebServer(){
         if(req.method == 'POST' && body){
           if(req.url == '/csr'){
             body = JSON.parse(body);
-            var caJSON = JSON.parse(fs.readFileSync('ca.json', 'utf8'));
+            var caJSON = JSON.parse(fs.readFileSync('ca2.json', 'utf8'));
             var certificates = Object.assign([],caJSON.certificates);
             var certificate = {
               "data": {
