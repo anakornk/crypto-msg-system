@@ -20,16 +20,21 @@ var derivedKey;
 function messageResponse(res){
   res.setEncoding('utf8');
   res.on('data', function (chunk) {
-      if(derivedKey){
-        var aesCtr = new aesjs.ModeOfOperation.ctr(derivedKey,new aesjs.Counter(5));
-        var encryptedBytes = aesjs.utils.hex.toBytes(chunk);
-        var decryptedBytes = aesCtr.decrypt(encryptedBytes);
-        var decryptedText = aesjs.utils.utf8.fromBytes(decryptedBytes);
-        console.log(decryptedText);
-      }else{
-        console.log(chunk);
+      try {
+        if(derivedKey){
+          var aesCtr = new aesjs.ModeOfOperation.ctr(derivedKey,new aesjs.Counter(5));
+          var encryptedBytes = aesjs.utils.hex.toBytes(chunk);
+          var decryptedBytes = aesCtr.decrypt(encryptedBytes);
+          var decryptedText = aesjs.utils.utf8.fromBytes(decryptedBytes);
+          console.log(decryptedText);
+        }else{
+          console.log(chunk);
+        }
+        process.exit(0);
+      } catch (err) {
+        console.log("Something is wrong");
+        process.exit(0);
       }
-      process.exit(0);
   });
 }
 

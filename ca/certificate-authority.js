@@ -111,31 +111,35 @@ function startWebServer(){
       req.on('end', function(){
         // var post = querystring.parse(body);
         // do something with body
-        if(req.method == 'POST' && body){
-          if(req.url == '/csr'){
-            body = JSON.parse(body);
-            var caJSON = JSON.parse(fs.readFileSync('ca.json', 'utf8'));
-            var certificates = Object.assign([],caJSON.certificates);
-            var certificate = {
-              "data": {
-                "subjectName": {
-                  "commonName": body.commonName
-                },
-                "issuerName": {
-                  "commonName": caJSON.commonName
-                },
-                "publicKeyInfo": body.publicKeyInfo
+        try {
+          if(req.method == 'POST' && body){
+            if(req.url == '/csr'){
+              body = JSON.parse(body);
+              var caJSON = JSON.parse(fs.readFileSync('ca.json', 'utf8'));
+              var certificates = Object.assign([],caJSON.certificates);
+              var certificate = {
+                "data": {
+                  "subjectName": {
+                    "commonName": body.commonName
+                  },
+                  "issuerName": {
+                    "commonName": caJSON.commonName
+                  },
+                  "publicKeyInfo": body.publicKeyInfo
+                }
               }
+              certificate.signature = ECC.secp256k1.sign(caJSON.privateKey,JSON.stringify(certificate.data));
+              certificates.unshift(certificate);
+              data = JSON.stringify(certificates);
+              sendResponse(res, data);
             }
-            certificate.signature = ECC.secp256k1.sign(caJSON.privateKey,JSON.stringify(certificate.data));
-            certificates.unshift(certificate);
-            data = JSON.stringify(certificates);
-            sendResponse(res, data);
+          } else {
+            sendResponse(res, JSON.stringify({msg:"invalid"}));
           }
-        } else {
-          sendResponse(res, JSON.stringify({msg:"invalid"}));
+        } catch (err) {
+          console.log("Invalid Request");
+          sendResponse(res, JSON.stringify({msg:"Invalid Request"}));
         }
-
 
       });
   });

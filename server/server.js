@@ -96,32 +96,37 @@ function startWebServer(){
       });
 
       req.on('end', function(){
-        // var post = querystring.parse(body);
         // do something with body
-        if(req.method == 'POST' && body){
-          console.log(body);
-          if(req.url == '/handshake'){
-            var servJSON = JSON.parse(fs.readFileSync('serv.json', 'utf8'));
-            data = JSON.stringify(servJSON.certificates);
-            sendResponse(res, data);
-          }else if(req.url == '/msg'){
-            var servJSON = JSON.parse(fs.readFileSync('serv.json', 'utf8'));
-            var encryptedHexWithPubKey = JSON.parse(body);
-            var data = ECC.secp256k1.eciesDecrypt(servJSON.privateKey,encryptedHexWithPubKey.encryptedHex, encryptedHexWithPubKey.otherPublicKey);
-            console.log(data.decryptedText);
-            var message = data.decryptedText.split("").reverse().join("");
-            var aesCtr = new aesjs.ModeOfOperation.ctr(data.derivedKey,new aesjs.Counter(5));
-            var textBytes = aesjs.utils.utf8.toBytes(message);
-            var encryptedBytes = aesCtr.encrypt(textBytes);
-            var encryptedHex = aesjs.utils.hex.fromBytes(encryptedBytes);
-            sendResponse(res, encryptedHex);
-          }else{
-            sendResponse(res, JSON.stringify({msg:"invalid"}));
-          }
+        try{
+          if(req.method == 'POST' ){
+            if(req.url == '/handshake'){
+              var servJSON = JSON.parse(fs.readFileSync('serv.json', 'utf8'));
+              data = JSON.stringify(servJSON.certificates);
+              sendResponse(res, data);
+            }else if(req.url == '/msg' && body){
+              console.log(body);
+              var servJSON = JSON.parse(fs.readFileSync('serv.json', 'utf8'));
+              var encryptedHexWithPubKey = JSON.parse(body);
+              var data = ECC.secp256k1.eciesDecrypt(servJSON.privateKey,encryptedHexWithPubKey.encryptedHex, encryptedHexWithPubKey.otherPublicKey);
+              console.log(data.decryptedText);
+              var message = data.decryptedText.split("").reverse().join("");
+              var aesCtr = new aesjs.ModeOfOperation.ctr(data.derivedKey,new aesjs.Counter(5));
+              var textBytes = aesjs.utils.utf8.toBytes(message);
+              var encryptedBytes = aesCtr.encrypt(textBytes);
+              var encryptedHex = aesjs.utils.hex.fromBytes(encryptedBytes);
+              sendResponse(res, encryptedHex);
+            }else{
+              sendResponse(res, JSON.stringify({msg:"No Routing"}));
+            }
 
-        } else {
-          sendResponse(res, JSON.stringify({msg:"invalid"}));
+          } else {
+            sendResponse(res, JSON.stringify({msg:"No"}));
+          }
+        } catch (err) {
+          console.log("Invalid Request");
+          sendResponse(res, JSON.stringify({msg:"Invalid Request"}));
         }
+
 
 
       });
