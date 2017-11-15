@@ -65,7 +65,7 @@ function receivedHandshake(res){
           }
         }
         if(valid){
-          var clientJSON = JSON.parse(fs.readFileSync('client.json', 'utf8'));
+          var clientJSON = JSON.parse(fs.readFileSync('root-ca.json', 'utf8'));
           var j;
           var certificate = certificates[i];
           for(j=0;j<clientJSON.length;j++){
