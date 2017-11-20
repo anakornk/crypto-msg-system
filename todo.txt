@@ -1,5 +1,0 @@
-client
-self signed
-
-client messageresponse
-sharedsecret add to ec.js

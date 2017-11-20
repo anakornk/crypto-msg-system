@@ -1,7 +1,7 @@
 var http = require('http');
 const readLine = require('readline');
 const fs = require('fs');
-const ECC = require('./lib/ecc.js');
+const ECC = require('../lib/ecc.js');
 
 const r1 = readLine.createInterface({
   input: process.stdin,
@@ -24,11 +24,11 @@ if(args[0] == 'init'){
       "certificates": []
     };
 
-    fs.writeFileSync('ca2.json', JSON.stringify(caInfo));
+    fs.writeFileSync('ca.json', JSON.stringify(caInfo));
     process.exit(0);
   });
 } else if(args[0] == 'selfsign'){
-  var caJSON = JSON.parse(fs.readFileSync('ca2.json', 'utf8'));
+  var caJSON = JSON.parse(fs.readFileSync('ca.json', 'utf8'));
   var certificate = {
     "data": {
       "subjectName": {
@@ -45,18 +45,19 @@ if(args[0] == 'init'){
   process.exit(0);
 } else if(args[0] == 'csr'){
   console.log("CSR - create certificate")
-  var caJSON = JSON.parse(fs.readFileSync('ca2.json', 'utf8'));
+  var caJSON = JSON.parse(fs.readFileSync('ca.json', 'utf8'));
 
-  r1.question('CA hostname: ', (hostName) => {
+  r1.question('CA Server URL:', (serverURL) => {
     const caInfo = {
       "commonName": caJSON.commonName,
       "publicKeyInfo": caJSON.publicKeyInfo
     };
     var postData = JSON.stringify(caInfo);
+    var temp = serverURL.split(":");
 
     var options = {
-        hostname: hostName,
-        port: 3001,
+        hostname: temp[0],
+        port: temp[1] || 3001,
         path: '/csr',
         method: 'POST',
         headers: {
@@ -67,9 +68,9 @@ if(args[0] == 'init'){
     var req = http.request(options, function (res) {
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
-          var caJSON = JSON.parse(fs.readFileSync('ca2.json', 'utf8'));
+          var caJSON = JSON.parse(fs.readFileSync('ca.json', 'utf8'));
           caJSON.certificates = JSON.parse(chunk);
-          fs.writeFileSync('ca2.json', JSON.stringify(caJSON));
+          fs.writeFileSync('ca.json', JSON.stringify(caJSON));
           process.exit(0);
         });
     });
@@ -97,7 +98,7 @@ function startWebServer(){
     res.end(body);
   }
 
-  var server = http.createServer().listen(3001);
+  var server = http.createServer().listen(process.env.PORT || 3001);
 
   server.on('request', function(req, res){
       var body;
@@ -110,36 +111,40 @@ function startWebServer(){
       req.on('end', function(){
         // var post = querystring.parse(body);
         // do something with body
-        if(req.method == 'POST' && body){
-          if(req.url == '/csr'){
-            body = JSON.parse(body);
-            var caJSON = JSON.parse(fs.readFileSync('ca2.json', 'utf8'));
-            var certificates = Object.assign([],caJSON.certificates);
-            var certificate = {
-              "data": {
-                "subjectName": {
-                  "commonName": body.commonName
-                },
-                "issuerName": {
-                  "commonName": caJSON.commonName
-                },
-                "publicKeyInfo": body.publicKeyInfo
+        try {
+          if(req.method == 'POST' && body){
+            if(req.url == '/csr'){
+              body = JSON.parse(body);
+              var caJSON = JSON.parse(fs.readFileSync('ca.json', 'utf8'));
+              var certificates = Object.assign([],caJSON.certificates);
+              var certificate = {
+                "data": {
+                  "subjectName": {
+                    "commonName": body.commonName
+                  },
+                  "issuerName": {
+                    "commonName": caJSON.commonName
+                  },
+                  "publicKeyInfo": body.publicKeyInfo
+                }
               }
+              certificate.signature = ECC.secp256k1.sign(caJSON.privateKey,JSON.stringify(certificate.data));
+              certificates.unshift(certificate);
+              data = JSON.stringify(certificates);
+              sendResponse(res, data);
             }
-            certificate.signature = ECC.secp256k1.sign(caJSON.privateKey,JSON.stringify(certificate.data));
-            certificates.unshift(certificate);
-            data = JSON.stringify(certificates);
-            sendResponse(res, data);
+          } else {
+            sendResponse(res, JSON.stringify({msg:"invalid"}));
           }
-        } else {
-          sendResponse(res, JSON.stringify({msg:"invalid"}));
+        } catch (err) {
+          console.log("Invalid Request");
+          sendResponse(res, JSON.stringify({msg:"Invalid Request"}));
         }
-
 
       });
   });
 
-  console.log('Listening on port 3001');
+  console.log('Listening on port ', process.env.PORT || 3001);
 }
 
 

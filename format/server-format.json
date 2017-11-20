@@ -1,0 +1,30 @@
+{
+   "privateKey":"1829f041b6f40ec7cdde85764b7e2a35d732c2bd8fb7de6a5d18d6aed3830a31",
+   "publicKeyInfo":{
+      "algorithm":"ecies-aes128",
+      "keyUsage":"encrypt",
+      "publicKey":"d0007e239dc284c153916c145fc5c4a65a5eb8151199c0dbce685f7c0f1e7bbfc08fb54f547315eb714db70283344632648470e15301fcc4f52b67112bb2db27"
+   },
+   "commonName":"anakornk",
+   "certificates":[
+      {
+         "data":{
+            "subjectName":{
+               "commonName":"anakornk"
+            },
+            "issuerName":{
+               "commonName":"veriSign"
+            },
+            "publicKeyInfo":{
+               "algorithm":"ecies-aes128",
+               "keyUsage":"encrypt",
+               "publicKey":"d0007e239dc284c153916c145fc5c4a65a5eb8151199c0dbce685f7c0f1e7bbfc08fb54f547315eb714db70283344632648470e15301fcc4f52b67112bb2db27"
+            }
+         },
+         "signature":{
+            "r":"f8d74ee8ded30b94fef720188a95dc6309f7af32078fd9b5f783e7f23b735b9a",
+            "s":"8d8b95809f2e2af13cf4ea190ff838664a20e68d83485152d67bf77bcc3ad85d"
+         }
+      }
+   ]
+}

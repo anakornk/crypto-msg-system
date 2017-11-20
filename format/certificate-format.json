@@ -1,0 +1,19 @@
+{
+   "data":{
+      "subjectName":{
+         "commonName":"tata"
+      },
+      "issuerName":{
+         "commonName":"tata"
+      },
+      "publicKeyInfo":{
+         "algorithm":"ecdsa-sha256",
+         "keyUsage":"verify",
+         "publicKey":"a32270c25ad5323dae36b773be1abe4faf1de597443276c1dd1c471937b16cbdffecd6a02e2176ea93d97b9aacf6bf02ba78804cc49984022721718a1b394428"
+      }
+   },
+   "signature":{
+      "r":"47be681673f8e7f850f88040a999be54a372a7c764671e113cbbeb5beb9079fb",
+      "s":"377197329ad7e68fcdbf3316e90aa53fed94d43b385e7d8d089a5c48b594ffde"
+   }
+}
